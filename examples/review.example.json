@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0",
+  "snapshotId": "snap-demo-001",
+  "verdict": "changes_requested",
+  "summary": "Ilustrační fixture: nový backend zrušil pole, které používá klient.",
+  "reviewedRepositories": [
+    {
+      "repoKey": "monorepo",
+      "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "repoKey": "mobile",
+      "headSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "repoKey": "service",
+      "headSha": "cccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "findings": [
+    {
+      "localId": "F1",
+      "priorFindingId": null,
+      "severity": "P1",
+      "category": "compatibility",
+      "title": "Nový backend nevrací pole očekávané dosavadním klientem",
+      "description": "Ukázkový diff odstraňuje displayName; připnutý klient ho stále čte. Nejde o skutečný firemní nález.",
+      "repoKey": "monorepo",
+      "path": "packages/api/src/participant.ts",
+      "startLine": 24,
+      "evidence": "Ilustrační umístění: mobile/src/participant.ts:18 používá response.displayName.",
+      "suggestedFix": "Zachovat zpětně kompatibilní pole po dobu podpory dosavadních klientů.",
+      "suggestedVerification": "Contract test nový backend + dosavadní klient a cross-surface zobrazení jména."
+    }
+  ],
+  "coverageGaps": [],
+  "qaSuggestions": [
+    {
+      "scenarioId": "registration-name",
+      "title": "Registrace a zobrazení jména",
+      "expectedResult": "Shodné jméno v odpovědi API, administraci a klientovi.",
+      "surfaceKeys": [
+        "live",
+        "backend",
+        "admin",
+        "mobile"
+      ],
+      "requiresHuman": false
+    }
+  ]
+}

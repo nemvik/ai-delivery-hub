@@ -1,0 +1,5 @@
+{
+  "name": "@hub/worker",
+  "private": true,
+  "type": "module"
+}

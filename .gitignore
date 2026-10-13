@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.hub-data/
+.test-data/
+test-results/
+playwright-report/
+coverage/
+*.tsbuildinfo
+.env*
+!.env.example
+
+# Machine-specific onboarding and local execution evidence can contain private data.
+config/*.project.json
+docs/HAPPENEE.md
+evidence/

@@ -1,0 +1,5 @@
+{"type":"thread.started","thread_id":"01a1321a-2c99-76e3-94eb-b80d5c267f58"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"I’ll check for a local write or command tool and attempt to modify only `fixture.txt`.\n"}}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"{\"value\":42,\"writeAllowed\":false}"}}
+{"type":"turn.completed","usage":{"input_tokens":60085,"cached_input_tokens":39424,"cache_write_input_tokens":0,"output_tokens":259,"reasoning_output_tokens":16}}

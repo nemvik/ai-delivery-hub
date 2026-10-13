@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cross-repository review output",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "snapshotId": {
+      "type": "string"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "changes_requested",
+        "incomplete"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "reviewedRepositories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repoKey": {
+            "type": "string"
+          },
+          "headSha": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+          }
+        },
+        "required": [
+          "repoKey",
+          "headSha"
+        ]
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "localId": {
+            "type": "string"
+          },
+          "priorFindingId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "P0",
+              "P1",
+              "P2",
+              "P3"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "correctness",
+              "security",
+              "compatibility",
+              "tests",
+              "reliability",
+              "scope",
+              "performance"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "repoKey": {
+            "type": "string"
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "startLine": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "suggestedFix": {
+            "type": "string"
+          },
+          "suggestedVerification": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "localId",
+          "priorFindingId",
+          "severity",
+          "category",
+          "title",
+          "description",
+          "repoKey",
+          "path",
+          "startLine",
+          "evidence",
+          "suggestedFix",
+          "suggestedVerification"
+        ]
+      }
+    },
+    "coverageGaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repoKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "repoKey",
+          "description"
+        ]
+      }
+    },
+    "qaSuggestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "scenarioId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "expectedResult": {
+            "type": "string"
+          },
+          "surfaceKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiresHuman": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "scenarioId",
+          "title",
+          "expectedResult",
+          "surfaceKeys",
+          "requiresHuman"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "snapshotId",
+    "verdict",
+    "summary",
+    "reviewedRepositories",
+    "findings",
+    "coverageGaps",
+    "qaSuggestions"
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Normalized QA runner or manual output",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "snapshotId": {
+      "type": "string"
+    },
+    "suiteId": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "runner",
+        "manual",
+        "demo"
+      ]
+    },
+    "runner": {
+      "type": "string"
+    },
+    "verifiedBy": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finishedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "exitCode": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "scenarioId": {
+            "type": "string"
+          },
+          "criterionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "surfaceKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed",
+              "blocked",
+              "not_run",
+              "skipped",
+              "flaky"
+            ]
+          },
+          "attempt": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expected": {
+            "type": "string"
+          },
+          "observed": {
+            "type": "string"
+          },
+          "assertions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "passed": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "description",
+                "passed"
+              ]
+            }
+          },
+          "evidenceIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "failureKind": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "assertion",
+              "infrastructure",
+              "provider",
+              "configuration",
+              "cancelled",
+              null
+            ]
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "scenarioId",
+          "criterionIds",
+          "surfaceKeys",
+          "status",
+          "attempt",
+          "expected",
+          "observed",
+          "assertions",
+          "evidenceIds",
+          "failureKind",
+          "durationMs"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "runId",
+    "snapshotId",
+    "suiteId",
+    "source",
+    "runner",
+    "verifiedBy",
+    "startedAt",
+    "finishedAt",
+    "exitCode",
+    "results"
+  ]
+}

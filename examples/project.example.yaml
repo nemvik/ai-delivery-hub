@@ -1,0 +1,111 @@
+# Návrh konfiguračního formátu. Není to hotová konfigurace firemního projektu.
+# Každé __SET_IN_ONBOARDING__ musí zabránit spuštění, dokud není nahrazené
+# ověřenou hodnotou. Skutečné příkazy/repo cesty se NESMĚJÍ odhadovat.
+schemaVersion: '1.0'
+project:
+  key: example-product
+  name: Ukázkový multi-repo produkt
+  dataDirectory: __SET_IN_ONBOARDING__
+  defaultMode: review_qa
+
+providers:
+  implementer:
+    provider: codex-cli
+    model: gpt-6-astra
+    effort: high
+    timeoutSeconds: 2700
+    maxTurns: null
+  reviewer:
+    provider: claude-code-cli
+    model: claude-opus-5-5
+    effort: high
+    timeoutSeconds: 1800
+    maxTurns: 30
+
+limits:
+  maxActiveRuns: 2
+  maxAgentProcesses: 2
+  maxHeavyBuilds: 1
+  maxQaEnvironments: 1
+  maxBrowserWorkersTotal: 2
+  maxNativeDevicesInUse: 1
+  maxReviewRounds: 3
+  maxRunMinutes: 120
+
+repositories:
+  - key: monorepo
+    sourcePath: __SET_IN_ONBOARDING__
+    baselineRef: __SET_IN_ONBOARDING__
+    packageManager: __SET_IN_ONBOARDING__
+    approvedCheckCommands: []
+  - key: mobile
+    sourcePath: __SET_IN_ONBOARDING__
+    baselineRef: __SET_IN_ONBOARDING__
+    packageManager: __SET_IN_ONBOARDING__
+    approvedCheckCommands: []
+  - key: service
+    sourcePath: __SET_IN_ONBOARDING__
+    baselineRef: __SET_IN_ONBOARDING__
+    packageManager: __SET_IN_ONBOARDING__
+    approvedCheckCommands: []
+
+surfaces:
+  - key: backend
+    repository: monorepo
+    kind: api
+    workingDirectory: __SET_IN_ONBOARDING__
+    runtimeProfile: __SET_IN_ONBOARDING__
+  - key: admin
+    repository: monorepo
+    kind: web
+    workingDirectory: __SET_IN_ONBOARDING__
+    runtimeProfile: __SET_IN_ONBOARDING__
+  - key: live
+    repository: monorepo
+    kind: web
+    workingDirectory: __SET_IN_ONBOARDING__
+    runtimeProfile: __SET_IN_ONBOARDING__
+  - key: mobile
+    repository: mobile
+    kind: native_ios # pouze ukázka; potvrdit platformu při onboardingu
+    workingDirectory: .
+    runtimeProfile: __SET_IN_ONBOARDING__
+  - key: service
+    repository: service
+    kind: __SET_IN_ONBOARDING__ # nepředpokládat web ani native
+    workingDirectory: .
+    runtimeProfile: __SET_IN_ONBOARDING__
+
+# Každý profil vyžaduje skutečné executable+args, readiness a namespace/cleanup.
+# Prázdné profily znamenají nenakonfigurované prostředí, ne automatický PASS.
+commandProfiles: []
+runtimeProfiles: []
+qaProfiles: []
+
+linear:
+  enabled: false
+  access: read-only
+  credentialRef: null
+  autoStart: false
+
+publishing:
+  enabled: false
+  provider: filesystem
+  destinationDirectory: __SET_IN_ONBOARDING__
+  autoPublishAfterRun: false
+  includeRestrictedArtifacts: false
+
+safety:
+  allowedRepositoryRoots: []
+  allowProduction: false
+  allowAutoPush: false
+  allowAutoMerge: false
+  allowAutoDeploy: false
+  requireApprovalForRiskyChanges: true
+  allowProviderBillingFallback: false
+
+retention:
+  maxArtifactGiB: 10
+  maxAgeDays: 14
+  preservePinnedRuns: true
+  preserveUnapprovedWork: true
