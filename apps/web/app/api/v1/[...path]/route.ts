@@ -16,6 +16,7 @@ import {
 import { id } from "../../../../../../packages/core/src/paths";
 import { gates } from "../../../../../../packages/core/src/gates";
 import { join } from "node:path";
+import { homedir } from "node:os";
 import { readFileSync } from "node:fs";
 import { Store } from "../../../../../../packages/db/src/index";
 import {
@@ -25,10 +26,13 @@ import {
 } from "../../../../../../packages/core/src/auth";
 import {
   createProject,
+  updateProject,
+  archiveProject,
   createTask,
   startRun,
   action,
 } from "../../../../../../packages/core/src/service";
+import { inspectRepository } from "../../../../../../packages/adapters/src/inspect";
 import { safePath, hash } from "../../../../../../packages/core/src/paths";
 import { artifactRoot } from "../../../../../../packages/adapters/src/artifacts";
 import type {
@@ -109,6 +113,7 @@ async function handler(
           retention: retentionPreview(s),
         },
         linearConfigured: !!process.env.HUB_LINEAR_TOKEN,
+        home: homedir(),
       });
     if (path[0] === "demo" && !read)
       return Response.json(s.enqueue("demo", null, {}, "create-demo-project"), {
@@ -175,8 +180,29 @@ async function handler(
     }
     if (path[0] === "projects") {
       if (read) return Response.json(s.list("projects"));
-      return Response.json(createProject(s, body), { status: 201 });
+      if (path[1] && path[2] === "archive")
+        return Response.json(
+          archiveProject(
+            s,
+            path[1],
+            z.object({ archived: z.boolean() }).strict().parse(body).archived,
+          ),
+        );
+      if (path[1] && !path[2])
+        return Response.json(updateProject(s, path[1], body));
+      if (!path[1])
+        return Response.json(createProject(s, body), { status: 201 });
     }
+    if (path.join("/") === "repositories/inspect" && !read)
+      return Response.json(
+        inspectRepository(
+          s.root,
+          z
+            .object({ path: z.string().min(1).max(1000) })
+            .strict()
+            .parse(body).path,
+        ),
+      );
     if (path[0] === "change-sets") {
       if (read) return Response.json(s.list("change_sets"));
       if (path[2] === "runs")

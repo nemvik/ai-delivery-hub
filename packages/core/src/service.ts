@@ -13,7 +13,8 @@ import { pinProject, git, sourceIdentity } from "../../adapters/src/git";
 import { realpathSync } from "node:fs";
 import { join } from "node:path";
 import { freezeReviewGuidance } from "./review-skills";
-export function createProject(store: Store, input: unknown) {
+import { assertOutsideHubData } from "../../adapters/src/inspect";
+function validateProject(store: Store, input: unknown) {
   const parsed = projectSchema.parse(input);
   if (
     new Set(parsed.repositories.map((r) => r.key)).size !==
@@ -22,13 +23,18 @@ export function createProject(store: Store, input: unknown) {
     throw new Error("Duplicate repository keys");
   const project = {
     ...parsed,
-    repositories: parsed.repositories.map((r) => ({
-      ...r,
-      sourcePath: realpathSync(r.sourcePath),
-      sourceIdentity: sourceIdentity(realpathSync(r.sourcePath)),
-    })),
-    id: id(),
-    createdAt: now(),
+    repositories: parsed.repositories.map((r) => {
+      const sourcePath = realpathSync(r.sourcePath);
+      assertOutsideHubData(store.root, sourcePath);
+      const identity = sourceIdentity(sourcePath);
+      // A stored identity is kept only while the folder is the same one;
+      // re-binding requires checking the folder again (identity omitted).
+      if (r.sourceIdentity && r.sourceIdentity !== identity)
+        throw new Error(
+          `The folder for “${r.key}” changed since it was registered. Check the folder again in Repositories to register it anew.`,
+        );
+      return { ...r, sourcePath, sourceIdentity: identity };
+    }),
   };
   for (const item of [...project.surfaces, ...project.commands])
     if (!project.repositories.some((r) => r.key === item.repoKey))
@@ -62,8 +68,47 @@ export function createProject(store: Store, input: unknown) {
       )
     )
       throw new Error("Service requires an approved start command");
-  freezeReviewGuidance(project);
-  return store.put("projects", project);
+  freezeReviewGuidance({ ...project, id: "", createdAt: "" });
+  return project;
+}
+export function createProject(store: Store, input: unknown) {
+  return store.put("projects", {
+    ...validateProject(store, input),
+    id: id(),
+    createdAt: now(),
+  });
+}
+export function updateProject(store: Store, projectId: string, input: unknown) {
+  const existing = store.get<Project>("projects", projectId);
+  if (!existing) throw new Error("Project not found");
+  const validated = validateProject(store, input);
+  const project = store.put<Project>("projects", {
+    ...validated,
+    id: existing.id,
+    createdAt: existing.createdAt,
+    archived: existing.archived,
+  });
+  store.event(
+    null,
+    "project",
+    `Project settings updated: ${project.name}; configuration ${digest(validated).slice(0, 12)}`,
+  );
+  return project;
+}
+export function archiveProject(
+  store: Store,
+  projectId: string,
+  archived: boolean,
+) {
+  const existing = store.get<Project>("projects", projectId);
+  if (!existing) throw new Error("Project not found");
+  const project = store.put<Project>("projects", { ...existing, archived });
+  store.event(
+    null,
+    "project",
+    `Project ${archived ? "archived" : "restored"}: ${project.name}`,
+  );
+  return project;
 }
 export function createTask(store: Store, input: unknown) {
   const projectId = z.object({ projectId: z.string() }).parse(input).projectId;
@@ -75,11 +120,16 @@ export function createTask(store: Store, input: unknown) {
   });
   const project = store.get<Project>("projects", task.projectId);
   if (!project) throw new Error("Project not found");
-  if (
-    !project.demo &&
-    [task.implementer, task.reviewer].some((r) => r.provider === "fake") &&
-    task.mode !== "qa_only"
-  )
+  if (project.archived)
+    throw new Error("Project is archived; restore it before creating tasks");
+  // Only roles the mode actually runs need a real provider.
+  const used =
+    task.mode === "qa_only"
+      ? []
+      : task.mode === "review_qa"
+        ? [task.reviewer]
+        : [task.implementer, task.reviewer];
+  if (!project.demo && used.some((r) => r.provider === "fake"))
     throw new Error("Fake provider is available only in a DEMO project");
   for (const key of Object.keys(task.refs))
     if (!project.repositories.some((r) => r.key === key))
@@ -104,6 +154,13 @@ export function startRun(
       if (!task) throw new Error("Task not found");
       const project = store.get<Project>("projects", task.projectId);
       if (!project) throw new Error("Project not found");
+      if (project.archived)
+        throw new Error("Project is archived; restore it before starting runs");
+      for (const key of Object.keys(task.refs))
+        if (!project.repositories.some((r) => r.key === key))
+          throw new Error(
+            `This task selects a branch for “${key}”, which is no longer in the project. Create a new task.`,
+          );
       const prior = task.sourceSnapshotId
         ? store.get<Snapshot>("snapshots", task.sourceSnapshotId)
         : undefined;

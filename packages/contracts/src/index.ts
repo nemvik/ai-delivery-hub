@@ -251,7 +251,14 @@ export const settingsSchema = z
 export type Project = z.infer<typeof projectSchema> & {
   id: string;
   createdAt: string;
+  archived?: boolean;
 };
+export interface RepositoryInspection {
+  path: string;
+  currentBranch: string | null;
+  branches: string[];
+  suggestedKey: string;
+}
 export type Task = z.infer<typeof taskSchema> & {
   id: string;
   createdAt: string;

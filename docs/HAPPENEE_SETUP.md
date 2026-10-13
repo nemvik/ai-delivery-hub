@@ -14,7 +14,7 @@ node --import tsx scripts/prepare-happenee.ts
 HUB_DATA_DIR="$PWD/.hub-data" node --import tsx scripts/onboard-project.ts config/happenee.project.json
 ```
 
-Generátor očekává `happenee-mobile-app`, `happenee-service-app` a vnořený Git kořen `happeneeServer/happeneeServer`. Ověří místní baseline refs a uloží konfiguraci do `config/happenee.project.json`. Výchozí model/effort lze změnit přes `HUB_CODEX_MODEL` / `HUB_CODEX_EFFORT`; pro skutečnou roli je nutný úspěšný Test connection. Registrace nic nespouští a shodný profil nevytvoří podruhé.
+Generátor očekává `happenee-mobile-app`, `happenee-service-app` a vnořený Git kořen `happeneeServer/happeneeServer`. Ověří místní baseline refs a uloží konfiguraci do `config/happenee.project.json`. Výchozí model/effort lze změnit přes `HUB_CODEX_MODEL` / `HUB_CODEX_EFFORT`; pro skutečnou roli je nutný úspěšný Send test prompt (App settings → AI connections). Registrace nic nespouští a shodný profil nevytvoří podruhé.
 
 ## Automatický výběr skills
 

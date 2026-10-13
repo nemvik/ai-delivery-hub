@@ -8,6 +8,46 @@ Zdrojový balíček při zahájení neměl Git metadata ani existující aplikac
 
 Publikační kontrola 13. 10. 2026: lokální profily, firemní inventář a běhová evidence jsou ignorované; veřejný onboarding popisuje jejich vytvoření. Test AT29 používá vlastní syntetický PNG místo screenshotu z předchozího E2E. Nad čistou kopií obsahu připraveného pro Git proběhly `eslint .`, `tsc --noEmit` a `vitest run`: PASS, 46/46 testů (9 souborů, 27.85 s), se sdílenými již instalovanými závislostmi a Node 22.23.1. Nová instalace závislostí se při této kontrole neprováděla.
 
+## UX redesign — 13. 10. 2026
+
+Zadání a návrh: [spec](docs/superpowers/specs/2026-10-13-ux-redesign-design.md), [plán](docs/superpowers/plans/2026-10-13-ux-redesign.md). Worker, plánovač, gate logika a provider adaptery se neměnily.
+
+**Implementováno**
+
+- Přepínač projektů s „All projects“, stav navigace v URL (`?project=…&view=…&run=…&tab=…`), nová úvodní stránka Overview (Needs you / Running now / Ready to start), Tasks a Runs s filtry. „Needs you“ počítá jen poslední run každého tasku.
+- Detail runu: box s dalším konkrétním krokem, průběh podle režimu, checklist gates s lidskými názvy (běžící run ukazuje „Not done yet“, ne Failed), technické údaje (SHA, snapshot, requested/actual model, procesy) sbalené. Zachované akce: approve, publish, decisions, prepare fix ×2, manual evidence, review for export, pause/cancel/retry/archive/refresh-baseline. Po Retry UI přejde na nový run.
+- Project settings: General (název, network/install přepínače, archivace), Repositories (kontrola složky, nabídka větví, Linear prefixy), AI models (výchozí role, přehled review skills), Tests (surfaces, commands s rozkladem na argv, scenarios), Advanced (validovaný JSON). Koncept, savebar, potvrzení při odchodu s neuloženými změnami. Průvodce New project (Name → Repositories → AI models) s povinným potvrzením důvěryhodných repozitářů.
+- App settings: AI connections (Check installation, Send test prompt), Models, Default models, Capacity, Storage, Report folders, Linear, Archived projects.
+- New task: Write it / From Linear, režimy jako karty, výběr větví, sbalený výběr modelů s upozorněním na neověřený model, dependency pins jako řádky, souhrn před startem, **Save and start run** / **Save for later** (u opravy primárně Save).
+- Backend: `POST /projects/:id` (sdílená validace s registrací, zachová id/createdAt/archived, přepočítá source identity), `POST /projects/:id/archive`, `POST /repositories/inspect` (jen čtení refů přes `git` s argv: kořen, větve, aktuální větev; žádný `git status`, aby se nespouštěly filtry definované v repozitáři; odmítne relativní/neexistující cestu, soubor, ne-repozitář, podsložku repozitáře a interní složky hubu), `createTask` odmítne archivovaný projekt, `/state` vrací `home` pro zkracování cest na `~`.
+- Vzhled: CSS tokeny pro světlý/tmavý režim (systém + přepínač), písmo Figtree přibalené lokálně (`@fontsource-variable/figtree` 5.3.0, přesně připnuté), responzivita do 390 px.
+
+**Otestováno** (Linux, Node 24.15.0, pnpm 11.24.0)
+
+- `pnpm lint` PASS, `pnpm typecheck` PASS, `pnpm build` PASS.
+- `pnpm test`: 67/67 PASS, 11 souborů. Nové: `tests/integration/projects.test.ts` (12 testů: úprava, validace, historie runu, archivace, inspect včetně negativních cest a nálezy z review níže) a `tests/unit/web-lib.test.ts` (argv rozklad, URL stav a fallback, štítky, průběh a další krok).
+- `pnpm test:e2e`: 6/6 PASS v dev režimu i s `HUB_E2E_PRODUCTION=1`. Nový E2E: průvodce projektem (chybná a platná složka), uložení, odmítnutí odchodu s neuloženými změnami (odkaz v aplikaci i tlačítko Zpět prohlížeče), archivace; inspect z cizího originu vrací 403.
+- Vizuální kontrola nad demo daty: světlý/tmavý režim, 1440 px a 390 px.
+- Před změnami na tomto stroji selhávaly 3/46 testů (AT01 ×2, AT20), protože chyběl Chromium pro Playwright 1.64. Po kroku z README `pnpm exec playwright install chromium` procházejí.
+
+**Nezávislé read-only review** (samostatný agent podle `PROMPT_REVIEW.md`) vrátilo CHANGES_REQUESTED. Opraveno, s regresními testy, které před opravou selhaly:
+
+- P1: Review + QA task v reálném projektu bez výchozího implementera padal na „Fake provider…“. Kontrola fake providera teď platí jen pro role, které režim skutečně spouští.
+- P2: uložení projektu tiše přepsalo `sourceIdentity` vyměněné složky. Uložená identita musí odpovídat; nové navázání jen po opětovném Check složky.
+- P2: task s refem pro přejmenovaný/odebraný repozitář by tiše testoval baseline. `startRun` takový task odmítne.
+- P2: záložka Tests a průběh míchaly výsledky starších snapshotů. Ukazují aktuální snapshot, starší jsou zvlášť a označené.
+- P2 (potvrzeno testem): `git status` v inspect spouštěl clean filter z `.git/config` ještě před potvrzením důvěry. Inspect už pracovní soubory nečte.
+- P3: kontrola interních složek hubu i ve `validateProject`; `startRun` odmítne archivovaný projekt; Retry sleduje jen nově vzniklý run a po 20 s ohlásí, že žádný nevznikl; guard neuložených změn i pro Zpět/Vpřed a zavření dialogu; dialog nevytvoří task dvakrát a při selhání startu nahlásí chybu u uloženého tasku; audit události úpravy projektu obsahuje otisk konfigurace; prázdný seznam příkazů se zobrazuje jako „None configured“, ne „Passed“.
+
+Ponecháno beze změny (mimo rozsah redesignu, existovalo dříve): `gates.repoChecks` vrací `passed` pro projekt bez příkazů (UI to už nevydává za úspěch); `pinProject` při Start spouští `git status` nad zdrojem po potvrzení důvěry; inspect volá `git` synchronně v API procesu.
+
+**Neověřeno**
+
+- Kontrola repozitáře a průvodce nad skutečnými firemními repozitáři (ověřeno nad demo fixtures a nad checkoutem hubu, pouze čtení).
+- Send test prompt a skutečná inference z nového UI (volá stejné endpointy; live smoke se znovu nespouštěl).
+- Linear import v novém dialogu (bez tokenu NOT_RUN).
+- Prohlížeče Safari a Firefox (testováno v Chromiu).
+
 ## Kritéria dokončení
 
 Funkční lokální UI + samostatný worker; durable fronta a SSE; skutečné izolované Git fixtures; řízené review/QA; skutečné Playwright screenshoty; pravdivé gates; export s integritou; odmítnutí neautorizovaných mutací a bezpečná obnova. Firemní integrace pouze přes explicitní onboarding.

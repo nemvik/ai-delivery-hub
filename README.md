@@ -14,7 +14,7 @@ pnpm demo
 pnpm dev
 ```
 
-Otevřete **http://127.0.0.1:3000**, v Tasks zvolte **Start run**. `pnpm dev` spouští web i worker. Demo vytváří tři skutečné Git repozitáře pouze v `$HUB_DATA_DIR/fixtures`, spustí lokální web a Playwright registraci → admin. Testovací client/service jsou knihovny, nikoli native aplikace. Opravný cyklus používá viditelně označený DEMO provider.
+Otevřete **http://127.0.0.1:3000**; na úvodní stránce **Overview** zvolte u demo tasku **Start run**. `pnpm dev` spouští web i worker. Demo vytváří tři skutečné Git repozitáře pouze v `$HUB_DATA_DIR/fixtures`, spustí lokální web a Playwright registraci → admin. Testovací client/service jsou knihovny, nikoli native aplikace. Opravný cyklus používá viditelně označený DEMO provider.
 
 Produkční sestavení lokální aplikace:
 
@@ -29,7 +29,7 @@ HUB_DATA_DIR="$PWD/.hub-data" pnpm start
 HUB_DATA_DIR="$PWD/.hub-data" pnpm run doctor
 ```
 
-V pnpm 11 je `pnpm doctor` vestavěná diagnostika pnpm. Pro diagnostiku **hubu** je nutné `pnpm run doctor` nebo Settings → Doctor. Tato akce kontroluje CLI verzi, flags a přihlášení, nespouští inference. **Test connection** je samostatná výslovná akce se spotřebou účtu.
+V pnpm 11 je `pnpm doctor` vestavěná diagnostika pnpm. Pro diagnostiku **hubu** je nutné `pnpm run doctor` nebo App settings → AI connections → **Check installation**. Tato akce kontroluje CLI verzi, flags a přihlášení, nespouští inference. **Send test prompt** (dříve Test connection) je samostatná výslovná akce se spotřebou účtu; úspěšný test zapíše model do katalogu jako ověřený.
 
 ## Ověření
 
